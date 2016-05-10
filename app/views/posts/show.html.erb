@@ -7,19 +7,7 @@
 
 <p>
   <strong>File:</strong>
-<% unless @post.file_url.nil? %>
-  <% if @post.file.format == 'pdf' %>
-      <%= cl_image_tag(@post.file.full_public_id, :format => "jpg", :width => 600, :height => 851) %>
-    <br/>
-      <%= cl_image_tag(@post.file.full_public_id, :format => "jpg", :width => 600, :height => 851, :page => 2) %>
-    <br/>
-  <% else %>
-      <%= cl_image_tag(@post.file) %>
-    <br/>
-  <% end if %>
-    <br/>
-      <%= @post.file_url %>
-<% end %>
+  <%= @post.file_url %>
 </p>
 
 <%= link_to 'Edit', edit_post_path(@post) %> |

@@ -10,8 +10,8 @@ class Post < ActiveRecord::Base
                                  :password => Rails.application.secrets.rubypress_password)
 
       post_content =  "<div>"\
-                      "#{ActionController::Base.helpers.cl_image_tag(self.file.full_public_id, :format => "jpg", :width => 600, :height => 851)}<br />"\
-                      "#{ActionController::Base.helpers.cl_image_tag(self.file.full_public_id, :format => "jpg", :width => 600, :height => 851, :page => 2)}<br />"\
+                      "#{ActionController::Base.helpers.cl_image_tag(self.file.full_public_id, :format => "jpg", :width => 600, :crop => :fit)}<br />"\
+                      "#{ActionController::Base.helpers.cl_image_tag(self.file.full_public_id, :format => "jpg", :width => 600, :crop => :fit, :page => 2)}<br />"\
                       "<div>#{self.title}</div>"\
                       "</div>"
 
