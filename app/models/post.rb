@@ -1,12 +1,38 @@
 class Post < ActiveRecord::Base
+  before_save :read_gmail, on: [:create]
   after_save :post_wordpress, on: [:create]
 
   mount_uploader :file, FileUploader
 
   private
+    def read_gmail
+      #read from gmail
+      gmail = Gmail.connect!(Rails.application.secrets.gmail_username,Rails.application.secrets.gmail_password)
+      if gmail.inbox.count(:unread) == 0
+        fail "Unread email not found."
+      else
+        gmail.inbox.find(:unread).each do |email|
+          if email.subject.match(/Boletim/i)
+            attachment = email.attachments[0]
+
+            #write attachments
+            folder = '/tmp/attachments/'
+            Dir.mkdir(folder) unless File.exists?(folder)
+            File.open(File.join(folder, attachment.filename), "w+b", 0644 ) { |f| f.write attachment.body.decoded }
+
+            #set @post
+            self.title = "Boletim Semanal " + email.subject[-3..-1]
+            self.file = File.open(File.join(folder, attachment.filename))
+          end
+          email.read!
+          email.archive!
+        end
+      end
+    end
+
     def post_wordpress
-      wp = Rubypress::Client.new(:host => Rails.application.secrets.rubypress_host, 
-                                 :username => Rails.application.secrets.rubypress_username, 
+      wp = Rubypress::Client.new(:host => Rails.application.secrets.rubypress_host,
+                                 :username => Rails.application.secrets.rubypress_username,
                                  :password => Rails.application.secrets.rubypress_password)
 
       post_content =  "<div>"\
@@ -28,7 +54,7 @@ class Post < ActiveRecord::Base
                                   :post_tag => [Time.now.year]
                                                 }
                                }
-                  )  
+                  )
 
     end
 
