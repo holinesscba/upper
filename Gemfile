@@ -36,6 +36,7 @@ gem 'carrierwave'
 gem 'cloudinary'
 
 gem 'rubypress'
+gem 'gmail'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
