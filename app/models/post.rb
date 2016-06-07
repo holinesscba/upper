@@ -26,14 +26,12 @@ class Post < ActiveRecord::Base
         self.file = File.open(File.join(folder, attachment.filename))
 
         email.read!
-        email.archive!
+        email.archive! # doesn't work by gmail gem issue.
       end
     end
 
     def post_wordpress
-      wp = Rubypress::Client.new(:host => Rails.application.secrets.rubypress_host,
-                                 :username => Rails.application.secrets.rubypress_username,
-                                 :password => Rails.application.secrets.rubypress_password)
+      wp = RubypressClient.instance.connect
 
       post_content =  "<div>"\
                       "#{ActionController::Base.helpers.cl_image_tag(self.file.full_public_id, :format => "jpg", :width => 600, :crop => :fit)}<br />"\
