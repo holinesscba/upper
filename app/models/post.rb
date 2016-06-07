@@ -10,24 +10,23 @@ class Post < ActiveRecord::Base
       gmail = GmailClient.instance.connect
 
       if gmail.inbox.count(:unread) == 0
-        fail "Unread email not found."
+        self.errors.add(:base, "No unread mail.") 
+        return false
       else
-        gmail.inbox.find(:unread).each do |email|
-          if email.subject.match(/Boletim/i)
-            attachment = email.attachments[0]
+        email = gmail.inbox.find(:unread, :gm => 'boletim').first
+        attachment = email.attachments[0]
 
-            #write attachments
-            folder = '/tmp/attachments/'
-            Dir.mkdir(folder) unless File.exists?(folder)
-            File.open(File.join(folder, attachment.filename), "w+b", 0644 ) { |f| f.write attachment.body.decoded }
+        #write attachments
+        folder = '/tmp/attachments/'
+        Dir.mkdir(folder) unless File.exists?(folder)
+        File.open(File.join(folder, attachment.filename), "w+b", 0644 ) { |f| f.write attachment.body.decoded }
 
-            #set @post
-            self.title = "Boletim Semanal " + email.subject[-3..-1]
-            self.file = File.open(File.join(folder, attachment.filename))
-          end
-          email.read!
-          email.archive!
-        end
+        #set @post
+        self.title = "Boletim Semanal " + email.subject[-3..-1]
+        self.file = File.open(File.join(folder, attachment.filename))
+
+        email.read!
+        email.archive!
       end
     end
 
