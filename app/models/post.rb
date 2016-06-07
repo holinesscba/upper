@@ -6,8 +6,12 @@ class Post < ActiveRecord::Base
 
   private
     def read_gmail
+      #connect
+      GmailClient.instance.connect
+
       #read from gmail
-      gmail = Gmail.connect!(Rails.application.secrets.gmail_username,Rails.application.secrets.gmail_password)
+      gmail = GmailClient.instance
+
       if gmail.inbox.count(:unread) == 0
         fail "Unread email not found."
       else
