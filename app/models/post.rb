@@ -6,11 +6,8 @@ class Post < ActiveRecord::Base
 
   private
     def read_gmail
-      #connect
-      GmailClient.instance.connect
-
-      #read from gmail
-      gmail = GmailClient.instance
+      # connect and instance
+      gmail = GmailClient.instance.connect
 
       if gmail.inbox.count(:unread) == 0
         fail "Unread email not found."
