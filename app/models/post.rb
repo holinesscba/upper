@@ -13,7 +13,7 @@ class Post < ActiveRecord::Base
         self.errors.add(:base, "No unread mail.") 
         return false
       else
-        email = gmail.inbox.find(:unread, :gm => 'boletim').first
+        email = gmail.inbox.find(:unread, :labels => 'boletim').first
         attachment = email.attachments[0]
 
         #write attachments
