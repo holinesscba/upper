@@ -2,6 +2,8 @@ class Post < ActiveRecord::Base
   before_save :read_gmail, on: [:create]
   after_save :post_wordpress, on: [:create]
 
+  validates :title, presence: true
+
   mount_uploader :file, FileUploader
 
   private
@@ -10,7 +12,7 @@ class Post < ActiveRecord::Base
       gmail = GmailClient.instance.connect
 
       if gmail.inbox.count(:unread) == 0
-        self.errors.add(:base, "No unread mail.") 
+        self.errors.add(:base, "No unread mail.")
         return false
       else
         attachment = nil
@@ -22,9 +24,9 @@ class Post < ActiveRecord::Base
         end
 
         if attachment.nil?
-          self.errors.add(:base, "No pdf file.") 
+          self.errors.add(:base, "No pdf file.")
           return false
-        end          
+        end
 
         #write attachments
         folder = '/tmp/attachments/'
