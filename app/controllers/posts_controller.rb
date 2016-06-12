@@ -16,7 +16,7 @@ class PostsController < ApplicationController
   end
 
   def create
-    @post = Post.new(post_params)
+    @post = post_service.build
 
     respond_to do |format|
       if @post.save
@@ -58,5 +58,9 @@ class PostsController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def post_params
       params.require(:post).permit(:title, :file)
+    end
+
+    def post_service
+      @post_service ||= PostService.new
     end
 end

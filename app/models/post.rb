@@ -1,5 +1,4 @@
 class Post < ActiveRecord::Base
-  before_save :read_gmail, on: [:create]
   after_save :post_wordpress, on: [:create]
 
   validates :title, presence: true
@@ -7,65 +6,31 @@ class Post < ActiveRecord::Base
   mount_uploader :file, FileUploader
 
   private
-    def read_gmail
-      # connect and instance
-      gmail = GmailClient.instance.connect
 
-      if gmail.inbox.count(:unread) == 0
-        self.errors.add(:base, "No unread mail.")
-        return false
-      else
-        attachment = nil
-        email = gmail.inbox.find(:unread, :labels => 'boletim').first
-        email.attachments.each do |file|
-          if file.filename[-3..-1] == "pdf"
-            attachment = file
-          end
-        end
+  def post_wordpress
+    wp = RubypressClient.instance.connect
 
-        if attachment.nil?
-          self.errors.add(:base, "No pdf file.")
-          return false
-        end
+    post_content =  "<div>"\
+      "#{ActionController::Base.helpers.cl_image_tag(self.file.full_public_id, :format => "jpg", :width => 600, :crop => :fit)}<br />"\
+      "#{ActionController::Base.helpers.cl_image_tag(self.file.full_public_id, :format => "jpg", :width => 600, :crop => :fit, :page => 2)}<br />"\
+      "<div>#{self.title}</div>"\
+      "</div>"
 
-        #write attachments
-        folder = '/tmp/attachments/'
-        Dir.mkdir(folder) unless File.exists?(folder)
-        File.open(File.join(folder, attachment.filename), "w+b", 0644 ) { |f| f.write attachment.body.decoded }
+    wp.newPost( :blog_id => 0, # 0 unless using WP Multi-Site, then use the blog id
+               :content => {
+      :post_status  => "draft",
+      :post_date    => Time.now,
+      :post_content => post_content,
+      :post_title   => self.title,
+      :post_name    => "/#{self.title.parameterize}",
+    :post_author  => 5, # 1 if there is only the admin user, otherwise the user's id
+      :terms_names  => {
+      :category   => ['Boletim Semanal'],
+      :post_tag => [Time.now.year]
+    }
+    }
+              )
 
-        #set @post
-        self.title = "Boletim Semanal " + email.subject[-3..-1]
-        self.file = File.open(File.join(folder, attachment.filename))
-
-        email.read!
-        email.archive! # doesn't work by gmail gem issue.
-      end
-    end
-
-    def post_wordpress
-      wp = RubypressClient.instance.connect
-
-      post_content =  "<div>"\
-                      "#{ActionController::Base.helpers.cl_image_tag(self.file.full_public_id, :format => "jpg", :width => 600, :crop => :fit)}<br />"\
-                      "#{ActionController::Base.helpers.cl_image_tag(self.file.full_public_id, :format => "jpg", :width => 600, :crop => :fit, :page => 2)}<br />"\
-                      "<div>#{self.title}</div>"\
-                      "</div>"
-
-      wp.newPost( :blog_id => 0, # 0 unless using WP Multi-Site, then use the blog id
-                  :content => {
-                               :post_status  => "draft",
-                               :post_date    => Time.now,
-                               :post_content => post_content,
-                               :post_title   => self.title,
-                               :post_name    => "/#{self.title.parameterize}",
-                               :post_author  => 5, # 1 if there is only the admin user, otherwise the user's id
-                               :terms_names  => {
-                                  :category   => ['Boletim Semanal'],
-                                  :post_tag => [Time.now.year]
-                                                }
-                               }
-                  )
-
-    end
+  end
 
 end

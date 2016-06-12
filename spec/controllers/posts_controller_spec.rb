@@ -18,18 +18,20 @@ RSpec.describe PostsController do
   describe 'POST #create' do
     let(:format) { :json }
 
+    let(:post_service)  { double }
+    let(:fake_post)     { instance_double('Post', to_model: Post.new, errors: []) }
+
     before do
-      allow_any_instance_of(Post).to receive(:read_gmail)
-      allow_any_instance_of(Post).to receive(:post_wordpress)
+      allow(controller).to receive(:post_service) { post_service }
+      allow(post_service).to receive(:build) { fake_post }
     end
 
     context 'with valid params' do
-      let(:valid_post_params) do
-        Hash[post: {
-          title: 'some title',
-          file: 'filename.pdf'
-        }]
+      before do
+        allow(fake_post).to receive(:save) { true }
       end
+
+      let(:valid_post_params) { Hash.new }
 
       it 'returns a 201 status code' do
         post :create, valid_post_params.merge(format: format)
@@ -39,15 +41,14 @@ RSpec.describe PostsController do
     end
 
     context 'with invalid params' do
-      let(:invalid_post_params) do
-        Hash[post: {
-          title: '',
-          file: ''
-        }]
+      before do
+        allow(fake_post).to receive(:save) { false }
       end
 
+      let(:invalid_post_params) { Hash.new }
+
       it 'returns a 422 status code' do
-        post :create, invalid_post_params.merge(format: format)
+        pos :create, invalid_post_params.merge(format: format)
 
         expect(response).to have_http_status(422)
       end
