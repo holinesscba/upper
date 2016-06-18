@@ -1,7 +1,6 @@
 class Post < ActiveRecord::Base
+  before_save :read_gmail, on: [:create]
   after_save :post_wordpress, on: [:create]
-
-  validates :title, presence: true
 
   mount_uploader :file, FileUploader
 
@@ -14,8 +13,18 @@ class Post < ActiveRecord::Base
         self.errors.add(:base, "No unread mail.") 
         return false
       else
+        attachment = nil
         email = gmail.inbox.find(:unread, :labels => 'boletim').first
-        attachment = email.attachments[0]
+        email.attachments.each do |file|
+          if file.filename[-3..-1] == "pdf"
+            attachment = file
+          end
+        end
+
+        if attachment.nil?
+          self.errors.add(:base, "No pdf file.") 
+          return false
+        end          
 
         #write attachments
         folder = '/tmp/attachments/'
